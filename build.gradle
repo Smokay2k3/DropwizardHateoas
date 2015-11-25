@@ -1,0 +1,31 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'application'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+def dropwizardVersion = '0.9.1';
+def googleGuiceVersion = '4.0';
+
+dependencies {
+    compile 'io.dropwizard:dropwizard-core:' + dropwizardVersion;
+    compile 'io.dropwizard:dropwizard-auth:' + dropwizardVersion;
+    compile 'io.dropwizard:dropwizard-client:' + dropwizardVersion;
+
+    compile 'com.hubspot.dropwizard:dropwizard-guice:0.8.3.0'
+
+    compile 'com.google.inject:guice:' + googleGuiceVersion
+    //compile 'com.google.inject.extensions:guice-assistedinject:' + googleGuiceVersion
+    //compile 'com.google.inject.extensions:guice-persist:4.0'
+
+    testCompile 'io.dropwizard:dropwizard-testing:' + dropwizardVersion;
+    testCompile 'org.hamcrest:hamcrest-core:1.2.1'
+
+}
+
+repositories {
+    maven { url "http://repo.maven.apache.org/maven2/" }
+}
+
+mainClassName = "service.PersonApplication"
