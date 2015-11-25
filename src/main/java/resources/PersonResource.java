@@ -1,8 +1,8 @@
 package resources;
 
-import static com.google.common.collect.Iterables.transform;
-
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.ws.rs.GET;
@@ -12,26 +12,24 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import guice.factory.PersonFactory;
+import guice.providers.PersonBuilderProvider;
 import model.Person;
-import model.PersonListItem;
 import storage.Storage;
 
-@Path("/people")
+@Path("/person")
 @Produces(MediaType.APPLICATION_JSON)
 public class PersonResource {
 
     private final Storage<Person, Long> storage;
 
-    private final PersonFactory personFactory;
+    private final PersonBuilderProvider provider;
 
     private long currentId = 0l;
 
     @Inject
-    public PersonResource(PersonFactory personFactory, Storage basicPersonStorage){
-        this.personFactory = personFactory;
+    public PersonResource(PersonBuilderProvider provider, Storage basicPersonStorage){
+        this.provider = provider;
         this.storage = basicPersonStorage;
     }
 
@@ -42,18 +40,18 @@ public class PersonResource {
     }
 
     @GET
-    public List<PersonListItem> get() {
-        return Lists.newArrayList(transform(storage.getAll().values(),
-                input -> new PersonListItem(input.getPersonId(), input.getFirstName())));
+    public List<Person> get() {
+        return storage.getAll().values().stream()
+                .sorted(Comparator.comparing(Person::getPersonId))
+                .collect(Collectors.toList());
     }
 
     @POST
     public Person add(@Valid Person person) {
-        Person newPerson = personFactory.create(
-                currentId,
-                person.getFirstName(),
-                person.getLastName(),
-                person.getContactInfo());
+        Person newPerson = provider.get()
+                .withPersonId(currentId).withFirstName(person.getFirstName())
+                .withLastName(person.getLastName()).withContactInfo(person.getContactInfo())
+                .build();
 
         storage.saveObject(newPerson);
         currentId++;

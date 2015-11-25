@@ -11,11 +11,12 @@ import auth.model.User;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.hubspot.dropwizard.guice.JerseyUtil;
-import guice.factory.OrderFactory;
-import guice.factory.PersonFactory;
-import guice.module.FactoryModule;
+import guice.module.ProviderModule;
 import guice.module.MultipleInstancesModule;
 import guice.module.StorageModule;
+import guice.providers.OrderBuilderProvider;
+import guice.providers.PersonBuilderProvider;
+import guice.providers.PersonBuilderProviderImpl;
 import healthcheck.TestDataHealthCheck;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
@@ -85,7 +86,7 @@ public class PersonApplication extends Application<ServerConfiguration> {
         return Guice.createInjector(
                 new MultipleInstancesModule(),
                 new StorageModule(),
-                new FactoryModule());
+                new ProviderModule());
     }
 
     private void setupAuthConfig(Environment environment) {
@@ -100,19 +101,29 @@ public class PersonApplication extends Application<ServerConfiguration> {
     }
 
     private void populateWithTestData(Injector injector, PersonResource personResource) {
-        PersonFactory personFactory = injector.getInstance(PersonFactory.class);
+        PersonBuilderProvider provider = injector.getInstance(PersonBuilderProvider.class);
+        personResource.add(provider.get()
+                .withFirstName("Bill").withLastName("Clinton")
+                .withContactInfo(new ContactInfo("123 Broadway St", "bill@clinton.gov"))
+                .build());
 
-        personResource.add(personFactory.create(null, "Bill", "Clinton", new ContactInfo("123 Broadway St", "bill@clinton.gov")));
-        personResource.add(personFactory.create(null, "George", "Bush", new ContactInfo("2140 6th Ave", "george@bush.gov")));
+        personResource.add(provider.get()
+                .withFirstName("George").withLastName("Bush")
+                .withContactInfo( new ContactInfo("2140 6th Ave", "george@bush.gov"))
+                .build());
     }
 
     private void populateWithTestData(Injector injector, OrderResource orderResource) {
-        OrderFactory orderFactory = injector.getInstance(OrderFactory.class);
+        OrderBuilderProvider provider = injector.getInstance(OrderBuilderProvider.class);
 
-        orderResource.add(orderFactory.create(20l, 0l, "New christmas socks"), 0l);
-        orderResource.add(orderFactory.create(22l, 0l, "Chainsaw"), 0l);
-        orderResource.add(orderFactory.create(23l, 0l, "Gadget"), 0l);
-        orderResource.add(orderFactory.create(21l, 1l, "A good pair of boots"), 1l);
+        orderResource.add(provider.get()
+                .withPersonId(0l).withDescription("New christmas socks").build());
+        orderResource.add(provider.get()
+                .withPersonId(0l).withDescription("Chainsaw").build());
+        orderResource.add(provider.get()
+                .withPersonId(0l).withDescription("Gadget").build());
+        orderResource.add(provider.get()
+                .withPersonId(1l).withDescription("A good pair of boots").build());
     }
 
     private void addCorsHeaders(Environment environment) {

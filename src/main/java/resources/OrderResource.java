@@ -2,10 +2,7 @@ package resources;
 
 import static com.google.common.collect.Iterables.transform;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.GET;
@@ -17,9 +14,8 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import guice.factory.OrderFactory;
+import guice.providers.OrderBuilderProvider;
 import model.Order;
-import model.OrderListItem;
 
 @Path("/orders")
 @Produces(MediaType.APPLICATION_JSON)
@@ -27,14 +23,14 @@ public class OrderResource {
 
     public static final String PATH_FOR_PERSON = "/person/";
 
-    private final OrderFactory orderFactory;
+    private final OrderBuilderProvider provider;
 
     private Map<Long, Order> orders = new HashMap<>();
     private Long currentOrderId = 0l;
 
     @Inject
-    public OrderResource(OrderFactory orderFactory){
-        this.orderFactory = orderFactory;
+    public OrderResource(OrderBuilderProvider provider){
+        this.provider = provider;
     }
 
     @GET
@@ -44,9 +40,10 @@ public class OrderResource {
     }
 
     @GET
-    public List<OrderListItem> get() {
-        return Lists.newArrayList(transform(orders.values(),
-                input -> new OrderListItem(input.getOrderId(), input.getDescription())));
+    public List<Order> get() {
+        return orders.values().stream()
+                .sorted(Comparator.comparing(Order::getOrderId))
+                .collect(Collectors.toList());
     }
 
     @GET
@@ -58,9 +55,10 @@ public class OrderResource {
     }
 
     @POST
-    @Path("/{personId}")
-    public Order add(Order order, @PathParam("personId") Long personId) {
-        Order newOrder = orderFactory.create(currentOrderId, personId, order.getDescription());
+    public Order add(Order order) {
+        Order newOrder = provider.get()
+                .withOrderId(currentOrderId).withPersonId(order.getPersonId())
+                .withDescription(order.getDescription()).build();
 
         orders.put(currentOrderId, newOrder);
         currentOrderId++;

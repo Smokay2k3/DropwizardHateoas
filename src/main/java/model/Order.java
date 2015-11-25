@@ -4,25 +4,17 @@ import hateoas.Links;
 import hateoas.OrderLinks;
 
 public class Order {
+
     private final Long orderId;
     private final Long personId;
-
     private final String description;
+    private final Links links;
 
-    private Links links;
-
-    public Order(Long orderId, Long personId, String description) {
-        this.orderId = orderId;
-        this.personId = personId;
-        this.description = description;
-
+    private Order(Builder builder) {
+        this.orderId = builder.orderId;
+        this.personId = builder.personId;
+        this.description = builder.description;
         this.links = new OrderLinks(orderId);
-    }
-
-    public Order() {
-        this.orderId = null;
-        this.personId = null;
-        this.description = null;
     }
 
     public Long getOrderId() {
@@ -39,6 +31,31 @@ public class Order {
 
     public Links getLinks() {
         return links;
+    }
+
+    public static class Builder{
+        private Long orderId;
+        private Long personId;
+        private String description;
+
+        public Builder withOrderId(Long orderId) {
+            this.orderId = orderId;
+            return this;
+        }
+
+        public Builder withPersonId(Long personId) {
+            this.personId = personId;
+            return this;
+        }
+
+        public Builder withDescription(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public Order build(){
+            return new Order(this);
+        }
     }
 
 }

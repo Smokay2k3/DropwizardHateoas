@@ -1,5 +1,6 @@
 package model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import hateoas.Links;
 import hateoas.PersonLinks;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -9,27 +10,20 @@ public class Person {
 
     @NotEmpty
     private final String firstName;
+
     @NotEmpty
     private final String lastName;
 
     private final ContactInfo contactInfo;
 
-    private Links links;
+    private final Links links;
 
-    public Person() {
-        personId = null;
-        firstName = null;
-        lastName = null;
-        contactInfo = null;
-    }
-
-    public Person(Long personId, String firstName, String lastName, ContactInfo contactInfo) {
-        this.personId = personId;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.contactInfo = contactInfo;
-
-        links = new PersonLinks(personId);
+    public Person(Builder builder) {
+        this.personId = builder.personId;
+        this.firstName = builder.firstName;
+        this.lastName = builder.lastName;
+        this.contactInfo = builder.contactInfo;
+        this.links = new PersonLinks(personId);
     }
 
     public Long getPersonId() {
@@ -79,7 +73,7 @@ public class Person {
         }
 
         public Person build(){
-            return new Person(personId, firstName, lastName, contactInfo);
+            return new Person(this);
         }
     }
 }
