@@ -10,6 +10,13 @@ public class Order {
     private final String description;
     private final Links links;
 
+    public Order() {
+        this.orderId = null;
+        this.personId = null;
+        this.description = null;
+        this.links = null;
+    }
+
     private Order(Builder builder) {
         this.orderId = builder.orderId;
         this.personId = builder.personId;
