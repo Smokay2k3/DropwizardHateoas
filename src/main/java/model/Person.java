@@ -17,6 +17,14 @@ public class Person {
     private final ContactInfo contactInfo;
 
     private final Links links;
+    
+    public Person() {
+        this.personId = null;
+        this.firstName = null;
+        this.lastName = null;
+        this.contactInfo = null;
+        this.links = null;
+    }
 
     public Person(Builder builder) {
         this.personId = builder.personId;
