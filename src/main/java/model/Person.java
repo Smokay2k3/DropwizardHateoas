@@ -1,88 +1,64 @@
 package model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import hateoas.Links;
+import hateoas.OrderLinks;
 import hateoas.PersonLinks;
-import org.hibernate.validator.constraints.NotEmpty;
+import org.mongojack.Id;
+import org.mongojack.ObjectId;
 
 public class Person {
-    private final Long personId;
 
-    @NotEmpty
-    private final String firstName;
+    @ObjectId
+    @Id
+    private String id;
 
-    @NotEmpty
-    private final String lastName;
+    private String firstName;
 
-    private final ContactInfo contactInfo;
+    private String lastName;
 
-    private final Links links;
-    
-    public Person() {
-        this.personId = null;
-        this.firstName = null;
-        this.lastName = null;
-        this.contactInfo = null;
-        this.links = null;
+    @JsonIgnore
+    private boolean writeLinks;
+
+    public Person(){
+        this.writeLinks = true;
     }
 
-    public Person(Builder builder) {
-        this.personId = builder.personId;
-        this.firstName = builder.firstName;
-        this.lastName = builder.lastName;
-        this.contactInfo = builder.contactInfo;
-        this.links = new PersonLinks(personId);
-    }
-
-    public Long getPersonId() {
-        return personId;
+    public String getId() {
+        return id;
     }
 
     public String getFirstName() {
         return firstName;
     }
 
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
     public String getLastName() {
         return lastName;
     }
 
-    public ContactInfo getContactInfo() {
-        return contactInfo;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
-    public Links getLinks() {
-        return links;
+    public boolean isWriteLinks() {
+        return writeLinks;
     }
 
-    public static class Builder{
-        private Long personId;
-        private String firstName;
-        private String lastName;
-        private ContactInfo contactInfo;
+    public void setWriteLinks(boolean writeLinks) {
+        this.writeLinks = writeLinks;
+    }
 
-        public Builder withPersonId(Long personId){
-            this.personId = personId;
-            return this;
+    @JsonProperty(value="links")
+    public Links getLinks(){
+        if(writeLinks) {
+            return new PersonLinks(id);
         }
-
-        public Builder withFirstName(String firstName){
-            this.firstName = firstName;
-            return this;
-        }
-
-        public Builder withLastName(String lastName){
-            this.lastName = lastName;
-            return this;
-        }
-
-        public Builder withContactInfo(ContactInfo contactInfo){
-            this.contactInfo = contactInfo;
-            return this;
-        }
-
-        public Person build(){
-            return new Person(this);
-        }
+        return null;
     }
 }
 

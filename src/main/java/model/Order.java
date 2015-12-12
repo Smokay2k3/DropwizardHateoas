@@ -1,68 +1,62 @@
 package model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import hateoas.Links;
 import hateoas.OrderLinks;
+import hateoas.PersonLinks;
+import org.mongojack.Id;
+import org.mongojack.ObjectId;
 
 public class Order {
 
-    private final Long orderId;
-    private final Long personId;
-    private final String description;
-    private final Links links;
+    @ObjectId
+    @Id
+    private String id;
+
+    private String personId;
+    private String description;
+
+    @JsonIgnore
+    private boolean writeLinks;
 
     public Order() {
-        this.orderId = null;
-        this.personId = null;
-        this.description = null;
-        this.links = null;
+        this.writeLinks = true;
     }
 
-    private Order(Builder builder) {
-        this.orderId = builder.orderId;
-        this.personId = builder.personId;
-        this.description = builder.description;
-        this.links = new OrderLinks(orderId);
+    public String getId() {
+        return id;
     }
 
-    public Long getOrderId() {
-        return orderId;
-    }
-
-    public Long getPersonId() {
+    public String getPersonId() {
         return personId;
+    }
+
+    public void setPersonId(String personId) {
+        this.personId = personId;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public Links getLinks() {
-        return links;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public static class Builder{
-        private Long orderId;
-        private Long personId;
-        private String description;
-
-        public Builder withOrderId(Long orderId) {
-            this.orderId = orderId;
-            return this;
-        }
-
-        public Builder withPersonId(Long personId) {
-            this.personId = personId;
-            return this;
-        }
-
-        public Builder withDescription(String description) {
-            this.description = description;
-            return this;
-        }
-
-        public Order build(){
-            return new Order(this);
-        }
+    public boolean isWriteLinks() {
+        return writeLinks;
     }
 
+    public void setWriteLinks(boolean writeLinks) {
+        this.writeLinks = writeLinks;
+    }
+
+    @JsonProperty("links")
+    public Links getLinks(){
+        if(writeLinks) {
+            return new OrderLinks(id, personId);
+        }
+        return null;
+    }
 }

@@ -11,23 +11,18 @@ import auth.model.User;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.hubspot.dropwizard.guice.JerseyUtil;
+import com.meltmedia.dropwizard.mongo.MongoBundle;
+import guice.module.DAOModule;
+import guice.module.MongoModule;
 import guice.module.ProviderModule;
 import guice.module.MultipleInstancesModule;
-import guice.module.StorageModule;
-import guice.providers.OrderBuilderProvider;
-import guice.providers.PersonBuilderProvider;
-import guice.providers.PersonBuilderProviderImpl;
 import healthcheck.TestDataHealthCheck;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.AuthValueFactoryProvider;
 import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
-import io.dropwizard.jetty.HttpConnectorFactory;
-import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import model.ContactInfo;
-import model.TestTask;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import resources.OrderResource;
@@ -37,19 +32,21 @@ import resources.VersionResource;
 
 public class PersonApplication extends Application<ServerConfiguration> {
 
+    private MongoBundle<ServerConfiguration> mongoBundle;
+
     public static void main(String[] args) throws Exception {
-        new PersonApplication().run(new String[]{"server"});
+        new PersonApplication().run(new String[]{"server", "config.yml"});
     }
 
     @Override
     public void initialize(Bootstrap<ServerConfiguration> bootstrap) {
-
+        bootstrap.addBundle(mongoBundle = MongoBundle.<ServerConfiguration>builder()
+                .withConfiguration(ServerConfiguration::getMongo)
+                .build());
     }
 
     @Override
     public void run(ServerConfiguration configuration, Environment environment) throws Exception {
-        ((HttpConnectorFactory) ((DefaultServerFactory) configuration.getServerFactory()).getApplicationConnectors().get(0)).setPort(9090);
-        ((HttpConnectorFactory) ((DefaultServerFactory) configuration.getServerFactory()).getAdminConnectors().get(0)).setPort(9091);
         //Setup Auth
         setupAuthConfig(environment);
 
@@ -68,24 +65,19 @@ public class PersonApplication extends Application<ServerConfiguration> {
         environment.jersey().register(versionResource);
         environment.jersey().register(protectedResource);
 
-        //Populate test data
-        populateWithTestData(injector, personResource);
-        populateWithTestData(injector, orderResource);
-
         //Jersey link filter
         //environment.jersey().property(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS, LinkFilter.class);
         addCorsHeaders(environment);
         //Add healthcheck
         environment.healthChecks().register("Test Health Check", new TestDataHealthCheck());
-        //Tasks
-        environment.admin().addTask(new TestTask());
     }
 
     // you probably would like to move this method to separate class
     private Injector createInjector(final ServerConfiguration conf) {
         return Guice.createInjector(
                 new MultipleInstancesModule(),
-                new StorageModule(),
+                new MongoModule(mongoBundle),
+                new DAOModule(),
                 new ProviderModule());
     }
 
@@ -98,32 +90,6 @@ public class PersonApplication extends Application<ServerConfiguration> {
 
         environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
         environment.jersey().register(RolesAllowedDynamicFeature.class);
-    }
-
-    private void populateWithTestData(Injector injector, PersonResource personResource) {
-        PersonBuilderProvider provider = injector.getInstance(PersonBuilderProvider.class);
-        personResource.add(provider.get()
-                .withFirstName("Bill").withLastName("Clinton")
-                .withContactInfo(new ContactInfo("123 Broadway St", "bill@clinton.gov"))
-                .build());
-
-        personResource.add(provider.get()
-                .withFirstName("George").withLastName("Bush")
-                .withContactInfo( new ContactInfo("2140 6th Ave", "george@bush.gov"))
-                .build());
-    }
-
-    private void populateWithTestData(Injector injector, OrderResource orderResource) {
-        OrderBuilderProvider provider = injector.getInstance(OrderBuilderProvider.class);
-
-        orderResource.add(provider.get()
-                .withPersonId(0l).withDescription("New christmas socks").build());
-        orderResource.add(provider.get()
-                .withPersonId(0l).withDescription("Chainsaw").build());
-        orderResource.add(provider.get()
-                .withPersonId(0l).withDescription("Gadget").build());
-        orderResource.add(provider.get()
-                .withPersonId(1l).withDescription("A good pair of boots").build());
     }
 
     private void addCorsHeaders(Environment environment) {

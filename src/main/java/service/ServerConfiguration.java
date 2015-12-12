@@ -1,5 +1,7 @@
 package service;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.meltmedia.dropwizard.mongo.MongoConfiguration;
 import io.dropwizard.Configuration;
 
 /**
@@ -7,12 +9,10 @@ import io.dropwizard.Configuration;
  */
 public class ServerConfiguration extends Configuration {
 
-    /*@Valid
-    @NotNull
-    private JerseyClientConfiguration jerseyClient = new JerseyClientConfiguration();
+    @JsonProperty
+    protected MongoConfiguration mongo;
 
-    @JsonProperty("jerseyClient")
-    public JerseyClientConfiguration getJerseyClientConfiguration() {
-        return jerseyClient;
-    }*/
+    public MongoConfiguration getMongo() {
+        return mongo;
+    }
 }

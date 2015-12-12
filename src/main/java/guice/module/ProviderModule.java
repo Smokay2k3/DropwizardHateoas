@@ -2,10 +2,10 @@ package guice.module;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
-import guice.providers.OrderBuilderProvider;
-import guice.providers.OrderBuilderProviderImpl;
-import guice.providers.PersonBuilderProvider;
-import guice.providers.PersonBuilderProviderImpl;
+import guice.providers.OrderProvider;
+import guice.providers.OrderProviderImpl;
+import guice.providers.PersonProvider;
+import guice.providers.PersonProviderImpl;
 
 /**
  * Created by timp on 13/11/2015.
@@ -14,7 +14,7 @@ public class ProviderModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(PersonBuilderProvider.class).to(PersonBuilderProviderImpl.class).in(Singleton.class);
-        bind(OrderBuilderProvider.class).to(OrderBuilderProviderImpl.class).in(Singleton.class);
+        bind(PersonProvider.class).to(PersonProviderImpl.class).in(Singleton.class);
+        bind(OrderProvider.class).to(OrderProviderImpl.class).in(Singleton.class);
     }
 }

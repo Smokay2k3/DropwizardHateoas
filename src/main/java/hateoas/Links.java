@@ -7,6 +7,7 @@ import java.util.List;
 import javax.ws.rs.core.UriBuilder;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import serializers.LinksSerializer;
 
@@ -16,7 +17,7 @@ import serializers.LinksSerializer;
 @JsonSerialize(using = LinksSerializer.class)
 public class Links {
 
-    private final List<Link> links;
+    private List<Link> links;
 
     public Links(){
         links = new ArrayList<>();

@@ -1,73 +1,69 @@
 package resources;
 
-import static com.google.common.collect.Iterables.transform;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.collect.Lists;
+import DAO.OrderDAO;
 import com.google.inject.Inject;
-import guice.providers.OrderBuilderProvider;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import guice.providers.OrderProvider;
 import model.Order;
+import model.Person;
+import org.mongojack.JacksonDBCollection;
 
-@Path("/orders")
+@Path("/order")
 @Produces(MediaType.APPLICATION_JSON)
 public class OrderResource {
 
     public static final String PATH_FOR_PERSON = "/person/";
 
-    private final OrderBuilderProvider provider;
-
-    private Map<Long, Order> orders = new HashMap<>();
-    private Long currentOrderId = 0l;
+    private final OrderDAO dao;
 
     @Inject
-    public OrderResource(OrderBuilderProvider provider){
-        this.provider = provider;
+    public OrderResource(OrderDAO dao){
+        this.dao = dao;
     }
 
     @GET
     @Path("/{orderId}")
-    public Order getOrder(@PathParam("orderId") Long orderId) {
-        return orders.get(orderId);
+    public Order getOrder(@PathParam("orderId") String orderId) {
+        return dao.getById(orderId);
     }
 
     @GET
     public List<Order> get() {
-        return orders.values().stream()
-                .sorted(Comparator.comparing(Order::getOrderId))
-                .collect(Collectors.toList());
+        return dao.getAll();
     }
 
     @GET
     @Path(PATH_FOR_PERSON + "{personId}")
-    public List<Order> getForPerson(@PathParam("personId") Long personId) {
-        return orders.values().stream()
+    public List<Order> getForPerson(@PathParam("personId") String personId) {
+        return get().stream()
                 .filter(o -> o.getPersonId().equals(personId))
                 .collect(Collectors.toList());
     }
 
     @POST
     public Order add(Order order) {
-        Order newOrder = provider.get()
-                .withOrderId(currentOrderId).withPersonId(order.getPersonId())
-                .withDescription(order.getDescription()).build();
-
-        orders.put(currentOrderId, newOrder);
-        currentOrderId++;
-
-        return newOrder;
+        dao.add(order);
+        return order;
     }
 
-    public Optional<Long> getPersonIdFromOrder(String orderId){
-        Order order = orders.get(orderId);
+    @DELETE
+    @Path("/{orderId}")
+    public Order delete(@PathParam("orderId") String orderId){
+        Order orderBeingDeleted = dao.getById(orderId);
+        dao.removeById(orderId);
+
+        return orderBeingDeleted;
+    }
+
+    public Optional<String> getPersonIdFromOrder(String orderId){
+        Order order = getOrder(orderId);
 
         if(order != null){
             return Optional.of(order.getPersonId());

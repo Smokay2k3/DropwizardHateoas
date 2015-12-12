@@ -1,64 +1,47 @@
 package resources;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.validation.Valid;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
+import DAO.PersonDAO;
 import com.google.inject.Inject;
-import guice.providers.PersonBuilderProvider;
 import model.Person;
-import storage.Storage;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 @Path("/person")
 @Produces(MediaType.APPLICATION_JSON)
 public class PersonResource {
-
-    private final Storage<Person, Long> storage;
-
-    private final PersonBuilderProvider provider;
-
-    private long currentId = 0l;
+    private final PersonDAO dao;
 
     @Inject
-    public PersonResource(PersonBuilderProvider provider, Storage basicPersonStorage){
-        this.provider = provider;
-        this.storage = basicPersonStorage;
+    public PersonResource(PersonDAO dao){
+        this.dao = dao;
     }
 
     @GET
     @Path("/{personId}")
-    public Person getPerson(@PathParam("personId") Long personId) {
-        return storage.get(personId);
+    public Person getPerson(@PathParam("personId") String personId) {
+        return dao.getById(personId);
     }
 
     @GET
     public List<Person> get() {
-        return storage.getAll().values().stream()
-                .sorted(Comparator.comparing(Person::getPersonId))
-                .collect(Collectors.toList());
+        return dao.getAll();
     }
 
     @POST
-    public Person add(@Valid Person person) {
-        Person newPerson = provider.get()
-                .withPersonId(currentId).withFirstName(person.getFirstName())
-                .withLastName(person.getLastName()).withContactInfo(person.getContactInfo())
-                .build();
+    public Person add(Person person) {
+        dao.add(person);
 
-        storage.saveObject(newPerson);
-        currentId++;
-
-        return newPerson;
+        return person;
     }
 
+    @DELETE
+    @Path("/{personId}")
+    public Person delete(@PathParam("personId") String personId){
+        Person personBeingDeleted = dao.getById(personId);
+        dao.removeById(personId);
 
-
+        return personBeingDeleted;
+    }
 }

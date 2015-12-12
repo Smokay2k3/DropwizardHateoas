@@ -1,12 +1,12 @@
 package guice.providers;
 
-import model.Person;
+import model.Order;
 
 import javax.inject.Provider;
 
 /**
  * Created by timp on 25/11/15.
  */
-public interface PersonBuilderProvider extends Provider<Person.Builder> {
+public interface OrderProvider extends Provider<Order> {
 
 }
